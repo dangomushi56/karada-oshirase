@@ -1,9 +1,9 @@
 {
-  "name": "からだのおしらせ",
-  "short_name": "からだ",
+  "name": "yururun",
+  "short_name": "yururun",
   "description": "毎日の体のケアをお知らせします",
-  "start_url": "/karada-oshirase/",
-  "scope": "/karada-oshirase/",
+  "start_url": "/yururun/",
+  "scope": "/yururun/",
   "display": "standalone",
   "background_color": "#1a1a2e",
   "theme_color": "#1a1a2e",
