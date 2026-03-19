@@ -116,7 +116,7 @@ self.addEventListener('notificationclick', function(event) {
       // 既存のウィンドウがあればフォーカス＋メッセージ送信
       for (var i = 0; i < clients.length; i++) {
         var client = clients[i];
-        if (client.url.indexOf('karada-oshirase') !== -1) {
+        if (client.url.indexOf('yururun') !== -1) {
           client.postMessage({
             type: 'notif_action',
             action: action,
