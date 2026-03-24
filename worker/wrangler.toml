@@ -1,0 +1,11 @@
+name = "yururun-push"
+main = "src/index.js"
+compatibility_date = "2025-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+[[kv_namespaces]]
+binding = "YURURUN_KV"
+id = "7d312deabe594f17b45d9248c215279b"
+
+[triggers]
+crons = ["* * * * *"]
