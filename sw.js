@@ -70,12 +70,14 @@ self.addEventListener('push', function(event) {
     };
   }
 
+  // 同じ項目の通知でも時刻が違えば別通知として表示するためタイムスタンプを付与
+  var notifTag = (data.tag || 'yururun') + '-' + Date.now();
   var options = {
     body:    data.body  || 'お知らせがあります',
     icon:    '/yururun/icon-192.png',
     badge:   '/yururun/icon-192.png',
-    tag:     data.tag   || 'yururun',
-    renotify: true,
+    tag:     notifTag,
+    renotify: false,
     data: {
       url: data.url || 'https://dangomushi56.github.io/yururun/',
       tag: data.tag || ''

@@ -1285,12 +1285,10 @@ function markItem(id,val){
     }
   }
   if(val===null)  showToast('↩','取り消しました');
-  updateBadge();
 }
 const snoozeTmr={};
 function snoozeItem(id){
   states[id]='snooze';expandedItem=null;saveStates();render();
-  updateBadge();
   showToast('⏰','30分後に再おしらせします');
   clearTimeout(snoozeTmr[id]);
   snoozeTmr[id]=setTimeout(()=>{
@@ -1302,17 +1300,27 @@ function snoozeItem(id){
 }
 /* ════════════════════════════════════════════
    BADGE & HIGHLIGHT
+   バッジ = 未確認プッシュ通知数（残タスク数ではない）
 ════════════════════════════════════════════ */
-function pendingCount(){
-  return activeItems().filter(function(r){
-    var s=states[r.id]; return s!=='done'&&s!=='skip';
-  }).length;
+function getUnreadCount(){
+  return parseInt(localStorage.getItem('yururun_unread')||'0',10);
+}
+function setUnreadCount(n){
+  try{ localStorage.setItem('yururun_unread', String(Math.max(0,n))); }catch(e){}
 }
 function updateBadge(){
   if(!('setAppBadge' in navigator)) return;
-  var n=pendingCount();
+  var n=getUnreadCount();
   if(n>0){ navigator.setAppBadge(n).catch(function(){}); }
   else   { navigator.clearAppBadge().catch(function(){}); }
+}
+function incrementUnread(){
+  setUnreadCount(getUnreadCount()+1);
+  updateBadge();
+}
+function clearUnread(){
+  setUnreadCount(0);
+  if('clearAppBadge' in navigator) navigator.clearAppBadge().catch(function(){});
 }
 function highlightCard(id){
   var el=document.getElementById('card-'+id);
@@ -1696,17 +1704,25 @@ if ('serviceWorker' in navigator) {
         if (!e.data) return;
         var tag = e.data.tag;
         if (e.data.type === 'notif_action') {
+          // アクションボタン（できた/スキップ/あとで）→ 直接記録 + バッジリセット
+          clearUnread();
           if (e.data.action === 'done')        markItem(tag, 'done');
           else if (e.data.action === 'skip')   markItem(tag, 'skip');
           else if (e.data.action === 'snooze') snoozeItem(tag);
           setTimeout(function(){ highlightCard(tag); }, 300);
         }
         if (e.data.type === 'show_notif_modal') {
-          showNotifModal(tag);
-          setTimeout(function(){ highlightCard(tag); }, 300);
+          // 通知本体タップ → メインパネルに戻してモーダル表示 + バッジリセット
+          clearUnread();
+          switchP('main');
+          setTimeout(function(){
+            showNotifModal(tag);
+            setTimeout(function(){ highlightCard(tag); }, 300);
+          }, 150);
         }
         if (e.data.type === 'push_received') {
-          updateBadge();
+          // 新しいプッシュ受信 → 未確認数を +1
+          incrementUnread();
         }
       });
     }).catch(function(err) {
@@ -1822,14 +1838,29 @@ function fetchSettingsFromServer() {
   var source   = params.get('source');
   var action   = params.get('action');
   var actionId = params.get('actionId') || params.get('tag'); // 旧形式後方互換
-  if (!actionId) return;
+  if (!actionId || source !== 'push') return;
   window.addEventListener('load', function() {
+    // 通知起点で開いた → バッジリセット
+    clearUnread();
     setTimeout(function() {
-      if (action === 'done')        { markItem(actionId, 'done');   highlightCard(actionId); }
-      else if (action === 'skip')   { markItem(actionId, 'skip');   highlightCard(actionId); }
-      else if (action === 'snooze') { snoozeItem(actionId);         highlightCard(actionId); }
-      else if (source === 'push')   { showNotifModal(actionId); setTimeout(function(){ highlightCard(actionId); }, 300); }
-    }, 500);
+      if (action === 'done') {
+        markItem(actionId, 'done');
+        highlightCard(actionId);
+      } else if (action === 'skip') {
+        markItem(actionId, 'skip');
+        highlightCard(actionId);
+      } else if (action === 'snooze') {
+        snoozeItem(actionId);
+        highlightCard(actionId);
+      } else {
+        // 通知本体タップ → メインパネルに切り替えてモーダル表示
+        switchP('main');
+        setTimeout(function(){
+          showNotifModal(actionId);
+          setTimeout(function(){ highlightCard(actionId); }, 300);
+        }, 150);
+      }
+    }, 600);
   });
 })();
 
