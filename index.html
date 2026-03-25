@@ -1800,8 +1800,8 @@ if ('serviceWorker' in navigator) {
           }, 150);
         }
         if (e.data.type === 'push_received') {
-          // 新しいプッシュ受信 → 未確認数を +1
-          incrementUnread();
+          // SWがIDBに+1済み → ページはIDBを読むだけ（二重加算防止）
+          updateBadge();
         }
       });
     }).catch(function(err) {
