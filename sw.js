@@ -1,8 +1,30 @@
-// ゆるるん — Service Worker v3
+// ゆるるん — Service Worker v4
 // ネットワーク優先・キャッシュなし戦略
 // ホーム画面追加後の空白ページ問題を防ぐ
 
-const SW_VERSION = 'v3';
+const SW_VERSION = 'v4';
+
+// IndexedDB ヘルパー — unread通知数をSW↔ページ間で共有
+function badgeIDB(mode, value) {
+  return new Promise(function(resolve) {
+    var req = indexedDB.open('yururun_badge', 1);
+    req.onupgradeneeded = function(e) { e.target.result.createObjectStore('kv'); };
+    req.onerror = function() { resolve(0); };
+    req.onsuccess = function(e) {
+      var db = e.target.result;
+      if (mode === 'write') {
+        var tx = db.transaction('kv', 'readwrite');
+        tx.objectStore('kv').put(value, 'unread');
+        tx.oncomplete = function() { resolve(value); };
+        tx.onerror    = function() { resolve(0); };
+      } else {
+        var r = db.transaction('kv', 'readonly').objectStore('kv').get('unread');
+        r.onsuccess = function(ev) { resolve(ev.target.result || 0); };
+        r.onerror   = function()   { resolve(0); };
+      }
+    };
+  });
+}
 
 // インストール：即座に有効化
 self.addEventListener('install', function(event) {
@@ -92,16 +114,22 @@ self.addEventListener('push', function(event) {
   event.waitUntil(
     self.registration.showNotification(data.title || 'ゆるるん', options)
       .then(function() {
-        // SW から直接バッジをセット（アプリが閉じていても動作）
-        if ('setAppBadge' in self.navigator) {
-          return self.navigator.setAppBadge().catch(function(){});
-        }
+        // IndexedDB のカウントを +1 してバッジに反映
+        return badgeIDB('read').then(function(count) {
+          var n = count + 1;
+          return badgeIDB('write', n).then(function() {
+            // iOSではSWからsetAppBadgeが動かない場合があるが試みる
+            if ('setAppBadge' in self.navigator) {
+              return self.navigator.setAppBadge(n).catch(function(){});
+            }
+          });
+        });
       })
       .then(function() {
         return self.clients.matchAll({ type: 'window', includeUncontrolled: true });
       })
       .then(function(clients) {
-        // 開いているウィンドウにも通知してページ側カウントを更新
+        // 開いているウィンドウにも通知してページ側でバッジ同期
         clients.forEach(function(c) {
           c.postMessage({ type: 'push_received', tag: data.tag || '' });
         });
@@ -121,7 +149,8 @@ self.addEventListener('notificationclick', function(event) {
   var baseUrl = 'https://dangomushi56.github.io/yururun/';
   var url;
 
-  // 通知をタップしたのでバッジをリセット
+  // 通知をタップしたのでIDBとバッジをリセット
+  badgeIDB('write', 0);
   if ('clearAppBadge' in self.navigator) {
     self.navigator.clearAppBadge().catch(function(){});
   }

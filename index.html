@@ -379,9 +379,23 @@ body{font-family:'Noto Sans JP',sans-serif;min-height:100dvh;position:relative;
   z-index:999999;
   visibility:hidden;
   pointer-events:none;
+  overflow:hidden;
   transition:bottom 0.4s cubic-bezier(0.34,1.20,0.64,1), visibility 0s 0.4s;
   text-align:center;
 }
+/* スワイプ時のカラーオーバーレイ */
+.notif-modal::before,
+.notif-modal::after{
+  content:'';
+  position:absolute;inset:0;
+  opacity:0;transition:opacity 0.08s;
+  pointer-events:none;
+}
+.notif-modal::before{background:linear-gradient(135deg,#3dba6e,#52cc82);}
+.notif-modal::after {background:linear-gradient(135deg,#7a8fa8,#8fa4bc);}
+.notif-modal.td::before{opacity:1;}
+.notif-modal.ts::after {opacity:1;}
+.notif-modal > *{position:relative;z-index:1;}
 .notif-modal.show{
   bottom:0;
   visibility:visible;
@@ -1300,27 +1314,41 @@ function snoozeItem(id){
 }
 /* ════════════════════════════════════════════
    BADGE & HIGHLIGHT
-   バッジ = 未確認プッシュ通知数（残タスク数ではない）
+   バッジ = 未確認プッシュ通知数
+   IndexedDB でSW↔ページ間のカウントを共有
 ════════════════════════════════════════════ */
-function getUnreadCount(){
-  return parseInt(localStorage.getItem('yururun_unread')||'0',10);
-}
-function setUnreadCount(n){
-  try{ localStorage.setItem('yururun_unread', String(Math.max(0,n))); }catch(e){}
+function openBadgeDB(cb){
+  var req=indexedDB.open('yururun_badge',1);
+  req.onupgradeneeded=function(e){e.target.result.createObjectStore('kv');};
+  req.onsuccess=function(e){cb(e.target.result);};
+  req.onerror=function(){};
 }
 function updateBadge(){
-  if(!('setAppBadge' in navigator)) return;
-  var n=getUnreadCount();
-  if(n>0){ navigator.setAppBadge(n).catch(function(){}); }
-  else   { navigator.clearAppBadge().catch(function(){}); }
+  if(!('setAppBadge' in navigator))return;
+  openBadgeDB(function(db){
+    var r=db.transaction('kv','readonly').objectStore('kv').get('unread');
+    r.onsuccess=function(e){
+      var n=e.target.result||0;
+      if(n>0)navigator.setAppBadge(n).catch(function(){});
+      else   navigator.clearAppBadge().catch(function(){});
+    };
+  });
 }
 function incrementUnread(){
-  setUnreadCount(getUnreadCount()+1);
-  updateBadge();
+  openBadgeDB(function(db){
+    var r=db.transaction('kv','readonly').objectStore('kv').get('unread');
+    r.onsuccess=function(e){
+      var n=(e.target.result||0)+1;
+      db.transaction('kv','readwrite').objectStore('kv').put(n,'unread');
+      if('setAppBadge' in navigator)navigator.setAppBadge(n).catch(function(){});
+    };
+  });
 }
 function clearUnread(){
-  setUnreadCount(0);
-  if('clearAppBadge' in navigator) navigator.clearAppBadge().catch(function(){});
+  openBadgeDB(function(db){
+    db.transaction('kv','readwrite').objectStore('kv').put(0,'unread');
+  });
+  if('clearAppBadge' in navigator)navigator.clearAppBadge().catch(function(){});
 }
 function highlightCard(id){
   var el=document.getElementById('card-'+id);
