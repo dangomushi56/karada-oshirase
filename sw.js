@@ -120,6 +120,15 @@ self.addEventListener('push', function(event) {
     ]
   };
 
+  // アイコンからアプリを開いた場合にも checkPendingNotif で拾えるよう保存
+  storePendingNotif({
+    tag:    data.tag   || '',
+    title:  data.title || 'ゆるるん',
+    body:   data.body  || 'お知らせがあります',
+    action: '',
+    ts:     Date.now()
+  });
+
   event.waitUntil(
     self.registration.showNotification(data.title || 'ゆるるん', options)
       .then(function() {
