@@ -8,19 +8,22 @@ const CORS_HEADERS = {
 
 // 通知スケジュール定義: { taskId, settingsKey, title, body }
 const SCHEDULE = [
-  { id: 'breakfast',   tk: 't-breakfast',   title: '朝ごはんの時間 🍳', body: '朝ごはん、食べましたか？' },
-  { id: 'lunch',       tk: 't-lunch',       title: '昼ごはんの時間 🥗', body: '席を立って、ちゃんとお昼を食べましょう。' },
-  { id: 'dinner-prep', tk: 't-dinner-prep', title: 'そろそろ台所へ 🍲',  body: 'この通知が来たら台所へ！夜ごはんを大事に。' },
-  { id: 'dinner',      tk: 't-dinner',      title: '夕ごはんの時間 🍽️', body: '今日の締めくくりに、ちゃんと食べましょう。' },
-  { id: 'walk',        tk: 't-walk',        title: '散歩の時間 🚶',      body: '少し外に出てみましょう。' },
-  { id: 'stretch-day', tk: 't-stretch-day', title: 'ストレッチの時間 🤸', body: 'デスクから離れて体を動かしましょう。' },
-  { id: 'stretch-night', tk: 't-stretch-night', title: '夜のストレッチ 🌙', body: '寝る前にほぐしておきましょう。' },
-  { id: 'cat-morning', tk: 't-cat-morning', title: '猫タイム（朝）🐱',  body: 'もふもふタイムです。' },
-  { id: 'cat-night',   tk: 't-cat-night',   title: '猫タイム（夜）🐱',  body: 'もふもふタイムです。' },
-  { id: 'bath-morning',  tk: 't-bath-morning',  title: 'お風呂の時間（朝）🛁',  body: '朝風呂でリフレッシュ！' },
-  { id: 'bath-evening',  tk: 't-bath-evening',  title: 'お風呂の時間（夕方）🛁', body: '夕方に湯船、いかがですか。' },
-  { id: 'bath-night',    tk: 't-bath-night',    title: 'お風呂の時間（夜）🛁',  body: 'ゆっくり温まりましょう。' },
-  { id: 'sleep',      tk: 't-sleep',       title: '就寝準備の時間 😴',  body: 'そろそろ寝る準備をしましょう。' },
+  { id: 'breakfast',     tk: 't-breakfast',     title: '朝ごはん 🍳',  body: '食べませんか？' },
+  { id: 'lunch',         tk: 't-lunch',         title: 'お昼ごはん 🥗', body: '席を立ちませんか？' },
+  { id: 'dinner-prep',   tk: 't-dinner-prep',   title: 'そろそろ台所へ 🍲', body: '夜ごはんの準備、始めませんか？' },
+  { id: 'dinner',        tk: 't-dinner',        title: '夕ごはん 🍽️',  body: 'ゆっくり食べませんか？' },
+  { id: 'walk',          tk: 't-walk',          title: '散歩 🚶',       body: '少し外に出ませんか？' },
+  { id: 'stretch-day',   tk: 't-stretch-day',   title: 'ストレッチ 🤸', body: '体をほぐしませんか？' },
+  { id: 'stretch-night', tk: 't-stretch-night', title: '夜のストレッチ 🌙', body: '寝る前にほぐしませんか？' },
+  { id: 'cat-morning',   tk: 't-cat-morning',   title: '猫タイム 🐱',   body: 'もふもふしませんか？' },
+  { id: 'cat-night',     tk: 't-cat-night',     title: '夜の猫タイム 🐱', body: 'もふもふしませんか？' },
+  { id: 'bath-morning',  tk: 't-bath-morning',  title: '朝風呂 🛁',     body: 'さっぱりしませんか？' },
+  { id: 'bath-evening',  tk: 't-bath-evening',  title: '夕方のお風呂 🛁', body: '湯船、どうですか？' },
+  { id: 'bath-night',    tk: 't-bath-night',    title: '夜のお風呂 🛁', body: 'ゆっくり温まりませんか？' },
+  { id: 'sleep',         tk: 't-sleep',         title: 'そろそろ就寝 😴', body: '寝る準備、しませんか？' },
+  // リラックス提案（ランダム選出はアプリ側で行う）
+  { id: 'relax', tk: 't-relax-1', title: 'ひと息いれませんか 🌿', body: '短い休憩で、後半の調子が変わります。' },
+  { id: 'relax', tk: 't-relax-2', title: 'ゆっくりする時間です 🌙', body: 'お気に入りの何かで、少しだけ休んで。' },
 ];
 
 // デフォルト設定
@@ -38,6 +41,8 @@ const DEFAULT_SETTINGS = {
   't-bath-evening': '16:30',
   't-bath-night':   '20:45',
   't-sleep':        '22:00',
+  't-relax-1':      '14:30',
+  't-relax-2':      '20:30',
   disabledIds: [],
 };
 

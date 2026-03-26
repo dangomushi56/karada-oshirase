@@ -869,19 +869,22 @@ const MSGS = {
 };
 const MILESTONES={
   25:{variants:[
-    {e:'🌱',t:'いいスタート！',   m:'小さな一歩が積み重なります。'},
-    {e:'🌤️',t:'動き出しましたね',  m:'今日も体が動いています。'},
+    {e:'🌱',t:'いいスタート！',    m:'小さな一歩が積み重なります。',              day:true},
+    {e:'🌤️',t:'動き出しましたね',  m:'今日も体が動いています。',                  day:true},
     {e:'🐾',t:'その調子！',        m:'続けることが大切です。'},
+    {e:'🌙',t:'夜も動けてます',    m:'夜に自分を大切にできた。それだけで十分です。',night:true},
   ]},
   50:{variants:[
-    {e:'🌿',t:'折り返し！',        m:'半分できました。今日のあなたはよく動いています。'},
-    {e:'⚡',t:'いいペースです',    m:'今日は調子がいいですね。'},
+    {e:'🌿',t:'折り返し！',        m:'半分できました。今日のあなたはよく動いています。', day:true},
+    {e:'⚡',t:'いいペースです',    m:'今日は調子がいいですね。',                  day:true},
     {e:'🌊',t:'流れに乗ってます',  m:'このまま続けていきましょう。'},
+    {e:'🌙',t:'夜もよく動けました',m:'今夜の自分を、ちゃんと大切にしています。',  night:true},
   ]},
   75:{variants:[
     {e:'🌸',t:'もうすぐ！',        m:'体が喜んでいます。あとひと息。'},
-    {e:'🌻',t:'素晴らしい！',      m:'今日はとてもよくできています。'},
+    {e:'🌻',t:'素晴らしい！',      m:'今日はとてもよくできています。',             day:true},
     {e:'✨',t:'輝いてます',        m:'残りわずか。このまま行きましょう。'},
+    {e:'🌙',t:'夜もここまで来た',  m:'今夜のあなた、よく頑張っています。',        night:true},
   ]},
   100:{variants:[
     {e:'🎉',t:'今日も完璧！',      m:'全部できました。おつかれさまでした。'},
@@ -1425,7 +1428,15 @@ function setBath(v){
 let mpT=null;
 function showMilestone(pct){
   const ms=MILESTONES[pct];if(!ms)return;
-  const m=ms.variants[Math.floor(Math.random()*ms.variants.length)];
+  const sl=slot(new Date().getHours());
+  const isNight=sl==='dusk'||sl==='night';
+  const pool=ms.variants.filter(function(v){
+    if(v.day&&isNight)  return false;
+    if(v.night&&!isNight) return false;
+    return true;
+  });
+  const src=pool.length>0?pool:ms.variants;
+  const m=src[Math.floor(Math.random()*src.length)];
   document.getElementById('mpEm').textContent=m.e;
   document.getElementById('mpTi').textContent=m.t;
   document.getElementById('mpMs').textContent=m.m;
@@ -1611,8 +1622,8 @@ function initApp(){
   // 4) プッシュ通知の登録状態を確認してボタンを更新
   checkPushRegistration();
 
-  // 5) バッジをIDBから同期
-  updateBadge();
+  // 5) バッジをIDBから同期し、アプリを開いたのでクリア
+  clearUnread();
 
   // 6) 処理待ち通知があればUIに反映（通知タップ後の新規起動に対応）
   checkPendingNotif();
@@ -1654,7 +1665,8 @@ document.addEventListener('visibilitychange', function(){
     document.querySelectorAll('.mode-chip').forEach(function(el){
       el.classList.toggle('active', el.getAttribute('data-mode')===dayMode);
     });
-    // 通知タップ後にpostMessageが届かなかった場合のフォールバック
+    // アプリが表示状態になったのでバッジをクリア＆通知フォールバック確認
+    clearUnread();
     checkPendingNotif();
   }
 });
@@ -1669,12 +1681,28 @@ let currentNotifId = null;
 function showNotifModal(id, fallback) {
   const all = allItems();
   let r = all.find(i=>i.id===id);
+  // リラックス通知: ボーナスプールからランダムに選んで表示
+  if (!r && id === 'relax') {
+    const pool = getAvailableBonus().filter(function(b){ return !states['bonus_'+b.id]; });
+    const pick = pool.length > 0 ? pool : BONUS_POOL;
+    const bonus = pick[Math.floor(Math.random() * pick.length)];
+    const sl = slot(new Date().getHours());
+    const msgs = {
+      morning:'朝のうちに、ひとつ心を整える時間を。',
+      midday: 'お昼すぎ、少し体を休めましょう。',
+      evening:'午後の疲れが出やすい時間。ひと息を。',
+      dusk:   '夕暮れ。一日をゆっくり終わらせましょう。',
+      night:  '夜は心を緩める時間。体が喜びます。',
+    };
+    r = { id: 'bonus_'+bonus.id, icon: bonus.icon, title: bonus.title,
+          msg: msgs[sl] || 'ゆっくり過ごす時間が、明日の体を作ります。' };
+  }
   // allItems に存在しない ID（'test' など）はfallbackで表示
   if (!r && fallback && fallback.title) {
     r = { id: id, icon: '🔔', title: fallback.title, msg: fallback.body || '' };
   }
   if (!r) return;
-  currentNotifId = id;
+  currentNotifId = r.id; // r.id を使うことで 'bonus_b02' 等も正しく追跡
   const now = new Date();
   document.getElementById('nmTime').textContent =
     String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0')+'  おしらせ';
@@ -1698,7 +1726,9 @@ function showNotifModal(id, fallback) {
 
 function closeNotifModal() {
   document.getElementById('notifOverlay').classList.remove('show');
-  document.getElementById('notifModal').classList.remove('show');
+  const modal = document.getElementById('notifModal');
+  modal.classList.remove('show');
+  modal._swipeAttached = false; // 次回表示時に新しいIDで再アタッチ
   currentNotifId = null;
 }
 
