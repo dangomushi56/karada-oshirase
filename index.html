@@ -524,11 +524,62 @@ body{font-family:'Noto Sans JP',sans-serif;min-height:100dvh;position:relative;
   box-shadow:0 4px 20px rgba(0,0,0,0.15);
 }
 .morning-start-btn:active{background:rgba(255,255,255,0.28);transform:scale(0.98);}
+
+/* ─── After Action Overlay ─── */
+.aa-overlay{
+  position:fixed;inset:0;z-index:9000;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  backdrop-filter:blur(20px) saturate(1.5);
+  -webkit-backdrop-filter:blur(20px) saturate(1.5);
+  background:rgba(0,0,0,0.20);
+  opacity:0;pointer-events:none;
+  transition:opacity 0.55s ease;
+}
+.aa-overlay.show{opacity:1;pointer-events:all;}
+.aa-content{
+  padding:2.5rem 2rem;text-align:center;max-width:300px;
+}
+.aa-text{
+  font-family:'Shippori Mincho',serif;
+  font-size:1.45rem;line-height:2.0;
+  color:rgba(255,255,255,0.93);
+  white-space:pre-line;letter-spacing:0.06em;
+  opacity:0;transform:translateY(14px);
+  transition:opacity 0.55s ease 0.2s, transform 0.55s ease 0.2s;
+}
+.aa-overlay.show .aa-text{opacity:1;transform:translateY(0);}
+.aa-sub{
+  margin-top:1.2rem;font-size:0.78rem;
+  color:rgba(255,255,255,0.40);font-style:italic;letter-spacing:0.04em;
+  opacity:0;transition:opacity 0.55s ease 0.4s;
+}
+.aa-overlay.show .aa-sub{opacity:1;}
+.aa-next-btn{
+  position:absolute;bottom:3.5rem;left:50%;transform:translateX(-50%);
+  background:none;border:none;
+  color:rgba(255,255,255,0.38);
+  font-size:0.78rem;cursor:pointer;
+  letter-spacing:0.08em;font-family:'Noto Sans JP',sans-serif;
+  padding:14px 28px;touch-action:manipulation;
+  opacity:0;transition:opacity 0.55s ease 0.6s;
+}
+.aa-overlay.show .aa-next-btn{opacity:1;}
+.aa-next-btn:active{color:rgba(255,255,255,0.75);}
 </style>
 </head>
 <body>
 
 <canvas id="sky"></canvas>
+
+<!-- After Action Overlay -->
+<div id="afterActionOverlay" class="aa-overlay" onclick="hideAfterAction()">
+  <div class="aa-content">
+    <div class="aa-text"  id="aaText"></div>
+    <div class="aa-sub"   id="aaSub"></div>
+  </div>
+  <button class="aa-next-btn" id="aaNextBtn">他のことを見る ↓</button>
+</div>
+
 <div class="flash" id="flash"><div class="flash-icon" id="flashIco"></div></div>
 <div id="mpopOverlay" style="position:fixed;inset:0;z-index:999998;display:none;" onclick="closeMpop()"></div>
 <div class="mpop" id="mpop"><span class="mp-em" id="mpEm"></span><div class="mp-ti" id="mpTi"></div><div class="mp-ms" id="mpMs"></div></div>
@@ -867,6 +918,151 @@ const MSGS = {
   lunch:          {midday:'席を立って、ちゃんとお昼を食べましょう。',default:'昼食をスキップすると、夕方の判断力が下がります。'},
   dinner:         {dusk:'一日の締めくくりに、ちゃんと食べましょう。',night:'しっかり食べてから、今夜の残り時間を過ごして。',default:'ゆっくり食べると、体が喜びます。'},
 };
+/* ════════════════════════════════════════
+   AFTER-ACTION MESSAGES
+   cat: 'praise'|'care'|'journal'|'skip'|'quote'
+   okFor: ['done','skip','snooze']  ← 全部なら省略可
+   slots: ['dawn','morning','midday','evening','dusk','night']  ← 省略=全時間
+   sub: 出典（省略可）
+════════════════════════════════════════ */
+const AFTER_ACTION_MSGS=[
+  // ── ねぎらい・汎用 (done) ──
+  {id:'p01',text:'よくできました。',                                    cat:'praise',okFor:['done']},
+  {id:'p02',text:'できた。\nそれだけで十分です。',                        cat:'praise',okFor:['done']},
+  {id:'p03',text:'自分のことを\n後回しにしなかった。\nそれが大事です。',    cat:'praise',okFor:['done']},
+  {id:'p04',text:'えらい。\n本当に。',                                   cat:'praise',okFor:['done']},
+  {id:'p05',text:'小さなことを続けることが\n力になります。',               cat:'praise',okFor:['done']},
+  {id:'p06',text:'今日も一歩。',                                         cat:'praise',okFor:['done']},
+  {id:'p07',text:'あなたはちゃんと\n自分を大切にしています。',             cat:'praise',okFor:['done']},
+  {id:'p08',text:'体が喜んでいます。',                                   cat:'praise',okFor:['done']},
+  {id:'p09',text:'できた日の積み重ねが\nあなたを作っています。',            cat:'praise',okFor:['done']},
+  {id:'p10',text:'自分をほめていい。\n本当によくできました。',              cat:'praise',okFor:['done']},
+  // ── ねぎらい・朝 (done) ──
+  {id:'pm1',text:'朝に動けた人は\n夜によく眠れます。',                    cat:'praise',okFor:['done'],slots:['dawn','morning']},
+  {id:'pm2',text:'いい朝のスタートです。',                               cat:'praise',okFor:['done'],slots:['dawn','morning']},
+  {id:'pm3',text:'朝にできると\n一日が変わります。',                      cat:'praise',okFor:['done'],slots:['dawn','morning']},
+  // ── ねぎらい・夜 (done) ──
+  {id:'pn1',text:'夜にここまでできた。\nえらい。',                        cat:'praise',okFor:['done'],slots:['dusk','night']},
+  {id:'pn2',text:'今夜のあなたは\n自分をちゃんと大切にしました。',          cat:'praise',okFor:['done'],slots:['dusk','night']},
+  {id:'pn3',text:'夜に動けた。\nきっとよく眠れます。',                    cat:'praise',okFor:['done'],slots:['dusk','night']},
+  {id:'pn4',text:'一日の終わりに\n自分をほめてあげて。',                  cat:'praise',okFor:['done'],slots:['dusk','night']},
+  // ── 気づき・自分をいたわる・汎用 ──
+  {id:'c01',text:'少し深呼吸して\nみてください。',                        cat:'care'},
+  {id:'c02',text:'今、肩が\n上がっていませんか？',                        cat:'care'},
+  {id:'c03',text:'水を一杯\n飲んでみませんか。',                          cat:'care'},
+  {id:'c04',text:'目を閉じて\n10秒だけ休んでください。',                  cat:'care'},
+  {id:'c05',text:'いつもと違う何かを\nしてみませんか？',                   cat:'care'},
+  {id:'c06',text:'たまには空を\n見てみましょう。',                        cat:'care'},
+  {id:'c07',text:'少し背伸びを\nしてみませんか。',                        cat:'care'},
+  {id:'c08',text:'体の力を抜いて\nゆっくり息を吐いて。',                  cat:'care'},
+  {id:'c09',text:'今の体の感覚に\n少し気づいてみてください。',             cat:'care'},
+  {id:'c10',text:'急がなくていいです。\nゆっくりでいい。',                 cat:'care'},
+  {id:'c11',text:'好きな香りのものを\n嗅いでみませんか。',                 cat:'care'},
+  {id:'c12',text:'今日、誰かに\n感謝できることはありますか？',             cat:'care'},
+  // ── 気づき・朝 ──
+  {id:'cm1',text:'朝の空気を\n少し吸ってみてください。',                  cat:'care',slots:['dawn','morning']},
+  {id:'cm2',text:'今日の一日を\nゆっくりと始めましょう。',                 cat:'care',slots:['dawn','morning']},
+  {id:'cm3',text:'朝の光を\n少し浴びてみてください。',                    cat:'care',slots:['dawn','morning']},
+  {id:'cm4',text:'今日どんな一日にしたいか\n少し思い浮かべてみて。',       cat:'care',slots:['dawn','morning']},
+  // ── 気づき・昼 ──
+  {id:'cd1',text:'画面から離れる時間に\nしてもいいです。',                 cat:'care',slots:['midday']},
+  {id:'cd2',text:'少し外の空気を\n吸ってみませんか。',                    cat:'care',slots:['midday']},
+  {id:'cd3',text:'昼間に体を動かすと\n夜がよく眠れます。',                cat:'care',slots:['midday']},
+  // ── 気づき・夕方 ──
+  {id:'ce1',text:'午後の疲れが\n出やすい時間です。\n少し緩めましょう。',   cat:'care',slots:['evening']},
+  {id:'ce2',text:'夕方は\n一日を振り返るのに\nいい時間です。',             cat:'care',slots:['evening']},
+  // ── 気づき・夜 ──
+  {id:'cn1',text:'夜散歩も\n心地よいですよね。',                          cat:'care',slots:['dusk','night']},
+  {id:'cn2',text:'今夜の空を\n見てみましたか？',                          cat:'care',slots:['dusk','night']},
+  {id:'cn3',text:'夜の静けさを\n少し味わってみてください。',               cat:'care',slots:['dusk','night']},
+  {id:'cn4',text:'照明を少し暗くして\n体を夜モードに。',                  cat:'care',slots:['dusk','night']},
+  {id:'cn5',text:'寝る前に\n今日よかったことを\n一つ思い出してみて。',     cat:'care',slots:['dusk','night']},
+  {id:'cn6',text:'夜は\n心を緩める時間です。',                            cat:'care',slots:['dusk','night']},
+  {id:'cn7',text:'今夜は\n何で自分をいたわりますか？',                    cat:'care',slots:['dusk','night']},
+  {id:'cn8',text:'夜の静かな時間を\n自分だけのものにしてください。',       cat:'care',slots:['night']},
+  // ── 問いかけ・ジャーナリング ──
+  {id:'j01',text:'最近、何かやってみたいことは\nありますか？',             cat:'journal'},
+  {id:'j02',text:'今の気分を\n一言で表すなら？',                          cat:'journal'},
+  {id:'j03',text:'今日、自分が心地よかった瞬間は\nどんな時でしたか？',     cat:'journal'},
+  {id:'j04',text:'最近、笑えていますか？',                               cat:'journal'},
+  {id:'j05',text:'自分に優しく\nできていますか？',                        cat:'journal'},
+  {id:'j06',text:'今日、自分をほめるとしたら\nどんなことですか？',         cat:'journal'},
+  {id:'j07',text:'最近、体が喜んだことは\nなんですか？',                  cat:'journal'},
+  {id:'j08',text:'今夜、自分へのご褒美は\n何にしますか？',                cat:'journal',slots:['dusk','night']},
+  {id:'j09',text:'最近、心が少し軽くなった\n瞬間はありましたか？',         cat:'journal'},
+  {id:'j10',text:'今のあなたに\n必要なものはなんですか？',                 cat:'journal'},
+  {id:'j11',text:'もし明日、何でもできるとしたら\n何をしますか？',         cat:'journal'},
+  {id:'j12',text:'体の中で\n一番疲れているのは\nどこですか？',             cat:'journal'},
+  {id:'j13',text:'最近、自然に\n触れましたか？',                          cat:'journal'},
+  {id:'j14',text:'今、一番大切にしたいことは\nなんですか？',              cat:'journal'},
+  {id:'j15',text:'今日の空は\nどんな色でしたか？',                        cat:'journal'},
+  // ── スキップ・スノーズ向け ──
+  {id:'s01',text:'今日はそれでいい。\n無理しないで。',                    cat:'skip',okFor:['skip','snooze']},
+  {id:'s02',text:'休むことも\n大切な習慣です。',                          cat:'skip',okFor:['skip','snooze']},
+  {id:'s03',text:'できないときがあっても\nそれがふつうです。',             cat:'skip',okFor:['skip','snooze']},
+  {id:'s04',text:'今日できなくても\nまた明日。',                          cat:'skip',okFor:['skip','snooze']},
+  {id:'s05',text:'全部やらなくていい。\nゆっくりいこう。',                 cat:'skip',okFor:['skip','snooze']},
+  {id:'s06',text:'疲れていませんか？\n少し休んでも大丈夫です。',           cat:'skip',okFor:['skip','snooze']},
+  {id:'s07',text:'自分を責めないで。\nあなたは十分やっています。',          cat:'skip',okFor:['skip','snooze']},
+  // ── 短い名言 ──
+  {id:'q01',text:'今この瞬間だけに\n集中してみてください。',               cat:'quote',sub:'ヨーガ哲学より'},
+  {id:'q02',text:'息を吸って\n今ここにいなさい。',                        cat:'quote',sub:'ティク・ナット・ハン'},
+  {id:'q03',text:'体の世話をすることは\n心の世話をすることだ。',            cat:'quote',sub:'ヨーガ思想'},
+  {id:'q04',text:'静けさの中に\nすべての答えがある。',                    cat:'quote',sub:'老子'},
+  {id:'q05',text:'小さな習慣が\n人生を作る。',                            cat:'quote',sub:'アリストテレス'},
+  {id:'q06',text:'疲れたときは\n立ち止まることも前進だ。',                 cat:'quote',sub:'禅の言葉'},
+  {id:'q07',text:'一日を\n丁寧に生きよ。',                               cat:'quote',sub:'道元'},
+  {id:'q08',text:'自分を大切にすることは\nわがままではない。',             cat:'quote'},
+  {id:'q09',text:'幸せは\n今この瞬間にある。',                            cat:'quote',sub:'仏教の教えより'},
+  {id:'q10',text:'ゆっくりやれば\nなんでもできる。',                      cat:'quote'},
+  {id:'q11',text:'今日という日を\n大切に。',                              cat:'quote'},
+  {id:'q12',text:'花は急いで\n咲こうとはしない。',                        cat:'quote'},
+];
+
+/* ─ 直近10件を除外してスロット・アクション適合メッセージをランダムに選出 ─ */
+var _recentAfterMsgs=[];
+(function(){ try{var s=localStorage.getItem('yururun_recent_msgs');if(s)_recentAfterMsgs=JSON.parse(s);}catch(e){} })();
+
+function pickAfterMsg(action){
+  var sl=slot(new Date().getHours());
+  function ok(m){
+    if(m.okFor && m.okFor.indexOf(action)===-1) return false;
+    if(_recentAfterMsgs.indexOf(m.id)!==-1) return false;
+    return true;
+  }
+  // 第1候補: スロット一致 + 条件OK
+  var pool=AFTER_ACTION_MSGS.filter(function(m){
+    return ok(m) && m.slots && m.slots.indexOf(sl)!==-1;
+  });
+  // 第2候補: スロット指定なし（全時間） + 条件OK
+  if(pool.length<3){
+    var gen=AFTER_ACTION_MSGS.filter(function(m){return ok(m)&&!m.slots;});
+    pool=pool.concat(gen);
+  }
+  // 最終フォールバック: 最近履歴をリセットして再取得
+  if(pool.length===0){
+    _recentAfterMsgs=[];
+    pool=AFTER_ACTION_MSGS.filter(function(m){
+      return !m.okFor || m.okFor.indexOf(action)!==-1;
+    });
+  }
+  var msg=pool[Math.floor(Math.random()*pool.length)];
+  _recentAfterMsgs.push(msg.id);
+  if(_recentAfterMsgs.length>10) _recentAfterMsgs.shift();
+  try{localStorage.setItem('yururun_recent_msgs',JSON.stringify(_recentAfterMsgs));}catch(e){}
+  return msg;
+}
+
+function showAfterAction(action){
+  var msg=pickAfterMsg(action);
+  document.getElementById('aaText').textContent=msg.text;
+  document.getElementById('aaSub').textContent=msg.sub||'';
+  document.getElementById('afterActionOverlay').classList.add('show');
+}
+function hideAfterAction(){
+  document.getElementById('afterActionOverlay').classList.remove('show');
+}
+
 const MILESTONES={
   25:{variants:[
     {e:'🌱',t:'いいスタート！',    m:'小さな一歩が積み重なります。',              day:true},
@@ -1260,6 +1456,10 @@ function markItem(id,val){
   expandedItem=null;
   saveStates();
   render();
+  if(val==='done'||val==='skip'){
+    // カード操作後にねぎらい画面を表示（toastの後に重ならないよう少し遅延）
+    setTimeout(function(){ showAfterAction(val); }, 480);
+  }
   if(val==='done'){
     const meals=getMeals(), care=getCareItems();
     const md=meals.filter(r=>states[r.id]==='done').length;
@@ -1307,6 +1507,7 @@ const snoozeTmr={};
 function snoozeItem(id){
   states[id]='snooze';expandedItem=null;saveStates();render();
   showToast('⏰','30分後に再おしらせします');
+  setTimeout(function(){ showAfterAction('snooze'); }, 480);
   clearTimeout(snoozeTmr[id]);
   snoozeTmr[id]=setTimeout(()=>{
     if(states[id]==='snooze'){delete states[id];saveStates();render();
