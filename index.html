@@ -202,6 +202,8 @@ body{font-family:'Noto Sans JP',sans-serif;min-height:100dvh;position:relative;
 .c-title-row{display:flex;align-items:baseline;gap:6px;margin-bottom:1px;}
 .c-title{font-size:13px;font-weight:500;color:var(--tx);line-height:1.3;}
 .c-msg{font-size:11px;color:var(--tx2);margin-top:3px;line-height:1.55;font-style:italic;}
+.c-msg-care{color:rgba(255,200,120,0.90);font-style:normal;}
+.care-alert{border-color:rgba(255,200,100,0.30)!important;}
 .c-time{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--tx3);margin-top:4px;}
 .c-right{flex-shrink:0;}
 
@@ -438,21 +440,26 @@ body{font-family:'Noto Sans JP',sans-serif;min-height:100dvh;position:relative;
 .nm-snooze{background:rgba(130,100,220,0.35);border:1px solid rgba(150,120,240,0.35);color:var(--tx);}
 .nm-done  {background:rgba(40,190,90,0.75);  border:1px solid rgba(40,220,100,0.50);  color:#fff;}
 
-/* ── フローティングメニュー ── */
-.fab-wrap{position:fixed;bottom:max(24px,env(safe-area-inset-bottom));right:20px;z-index:1000;display:flex;flex-direction:column;align-items:flex-end;gap:10px;}
-.fab-item{display:flex;align-items:center;gap:8px;opacity:0;pointer-events:none!important;transform:translateY(20px) scale(0.85);transition:opacity 0.2s,transform 0.25s cubic-bezier(0.34,1.56,0.64,1);}
-.fab-item.open{opacity:1;pointer-events:all!important;transform:translateY(0) scale(1);}
-.fab-item:nth-child(1){transition-delay:0.06s;}
-.fab-item:nth-child(2){transition-delay:0.03s;}
-.fab-item:nth-child(3){transition-delay:0.01s;}
-.fab-lbl{font-size:12px;font-weight:500;color:#fff;background:rgba(0,0,0,0.42);border:1px solid rgba(255,255,255,0.18);border-radius:20px;padding:5px 13px;white-space:nowrap;}
-.fab-btn{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;-webkit-tap-highlight-color:rgba(255,255,255,0.2);background:rgba(255,255,255,0.16);border:1px solid rgba(255,255,255,0.28);box-shadow:0 4px 20px rgba(0,0,0,0.18);transition:transform 0.15s,background 0.15s;}
-.fab-btn:active{transform:scale(0.90);}
-.fab-btn.active-page{background:rgba(255,255,255,0.32);border-color:rgba(255,255,255,0.65);}
-.fab-main{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;cursor:pointer;-webkit-tap-highlight-color:rgba(255,255,255,0.2);background:rgba(255,255,255,0.20);border:1.5px solid rgba(255,255,255,0.40);box-shadow:0 6px 28px rgba(0,0,0,0.22);transition:transform 0.25s cubic-bezier(0.34,1.56,0.64,1),background 0.2s;}
-.fab-main:active{transform:scale(0.90);}
-.fab-main.menu-open{transform:rotate(180deg);background:rgba(255,255,255,0.28);}
-.fab-spacer{height:90px;}
+/* ── グローバルナビ（画面下部） ── */
+.gnav{
+  position:fixed;bottom:0;left:0;right:0;z-index:1000;
+  display:flex;
+  background:rgba(0,0,0,0.42);
+  backdrop-filter:blur(20px) saturate(1.4);
+  -webkit-backdrop-filter:blur(20px) saturate(1.4);
+  border-top:1px solid rgba(255,255,255,0.11);
+  padding-bottom:env(safe-area-inset-bottom);
+}
+.gnav-btn{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:10px 0 8px;cursor:pointer;touch-action:manipulation;gap:3px;
+  opacity:0.50;transition:opacity 0.2s;
+  -webkit-tap-highlight-color:transparent;
+}
+.gnav-btn.active{opacity:1;}
+.gnav-ico{font-size:22px;line-height:1;}
+.gnav-lbl{font-size:10px;color:var(--tx);letter-spacing:0.05em;}
+.gnav-spacer{height:72px;}
 .bonus-now{font-size:10px;color:rgba(80,200,110,0.9);}
 .bonus-time{font-size:10px;color:var(--tx3);}
 
@@ -554,17 +561,13 @@ body{font-family:'Noto Sans JP',sans-serif;min-height:100dvh;position:relative;
   opacity:0;transition:opacity 0.55s ease 0.4s;
 }
 .aa-overlay.show .aa-sub{opacity:1;}
-.aa-next-btn{
-  position:absolute;bottom:3.5rem;left:50%;transform:translateX(-50%);
-  background:none;border:none;
-  color:rgba(255,255,255,0.38);
-  font-size:0.78rem;cursor:pointer;
-  letter-spacing:0.08em;font-family:'Noto Sans JP',sans-serif;
-  padding:14px 28px;touch-action:manipulation;
+.aa-pill{
+  position:absolute;bottom:2.8rem;left:50%;transform:translateX(-50%);
+  width:40px;height:5px;border-radius:3px;
+  background:rgba(255,255,255,0.28);
   opacity:0;transition:opacity 0.55s ease 0.6s;
 }
-.aa-overlay.show .aa-next-btn{opacity:1;}
-.aa-next-btn:active{color:rgba(255,255,255,0.75);}
+.aa-overlay.show .aa-pill{opacity:1;}
 </style>
 </head>
 <body>
@@ -577,7 +580,7 @@ body{font-family:'Noto Sans JP',sans-serif;min-height:100dvh;position:relative;
     <div class="aa-text"  id="aaText"></div>
     <div class="aa-sub"   id="aaSub"></div>
   </div>
-  <button class="aa-next-btn" id="aaNextBtn">他のことを見る ↓</button>
+  <div class="aa-pill"></div>
 </div>
 
 <div class="flash" id="flash"><div class="flash-icon" id="flashIco"></div></div>
@@ -658,7 +661,7 @@ body{font-family:'Noto Sans JP',sans-serif;min-height:100dvh;position:relative;
     <div class="sec-lbl">✨ 今日のひと手間</div>
     <div id="bonusCard"></div>
   </div>
-  <div class="fab-spacer"></div>
+  <div class="gnav-spacer"></div>
 </div>
 
 <!-- ═══ NOTIFICATION PREVIEW MODAL ═══ -->
@@ -1017,6 +1020,102 @@ const AFTER_ACTION_MSGS=[
   {id:'q10',text:'ゆっくりやれば\nなんでもできる。',                      cat:'quote'},
   {id:'q11',text:'今日という日を\n大切に。',                              cat:'quote'},
   {id:'q12',text:'花は急いで\n咲こうとはしない。',                        cat:'quote'},
+  // ── ねぎらい・追加 (done) ──
+  {id:'p11',text:'今日も自分への\n約束を守りました。',                     cat:'praise',okFor:['done']},
+  {id:'p12',text:'続けるって\n簡単じゃない。\nでもあなたはやった。',         cat:'praise',okFor:['done']},
+  {id:'p13',text:'ひとつできた。\nそれで十分です。',                        cat:'praise',okFor:['done']},
+  {id:'p14',text:'できないときもある。\nそれでも今日は動けた。',             cat:'praise',okFor:['done']},
+  {id:'p15',text:'あなたの「できた」は\n本物です。',                        cat:'praise',okFor:['done']},
+  {id:'p16',text:'自分のために\n動けた一日です。',                          cat:'praise',okFor:['done']},
+  {id:'p17',text:'習慣は毎日の\n小さな積み重ねでできている。',              cat:'praise',okFor:['done']},
+  // ── ねぎらい・昼 (done) ──
+  {id:'pd1',text:'昼間に動けた。\nその体を大切に。',                        cat:'praise',okFor:['done'],slots:['midday']},
+  {id:'pd2',text:'一日の真ん中に\n自分のことをした。\nえらい。',             cat:'praise',okFor:['done'],slots:['midday']},
+  // ── ねぎらい・夕方 (done) ──
+  {id:'pe1',text:'夕方に動けました。\n体にご褒美の時間です。',               cat:'praise',okFor:['done'],slots:['evening']},
+  {id:'pe2',text:'夕方の習慣は\n夜の眠りを穏やかにします。',                cat:'praise',okFor:['done'],slots:['evening']},
+  // ── ねぎらい・朝・追加 (done) ──
+  {id:'pm4',text:'朝に動けた体に\nありがとう。',                            cat:'praise',okFor:['done'],slots:['dawn','morning']},
+  {id:'pm5',text:'朝の習慣が\n一日を作っていきます。',                      cat:'praise',okFor:['done'],slots:['dawn','morning']},
+  // ── ねぎらい・夜・追加 (done) ──
+  {id:'pn5',text:'夜遅くても\n自分のことを忘れなかった。',                  cat:'praise',okFor:['done'],slots:['dusk','night']},
+  {id:'pn6',text:'今夜のあなたは\nよくやりました。',                        cat:'praise',okFor:['done'],slots:['dusk','night']},
+  // ── 気づき・体感覚 ──
+  {id:'c13',text:'今、足の裏を\n床にしっかりつけてみて。',                  cat:'care'},
+  {id:'c14',text:'歯を食いしばって\nいませんか？',                          cat:'care'},
+  {id:'c15',text:'顔の筋肉を\nゆっくり緩めてみて。',                        cat:'care'},
+  {id:'c16',text:'手のひらを\n温めてみてください。',                        cat:'care'},
+  {id:'c17',text:'体が何かを\n伝えようとしています。\n少し聞いてみて。',     cat:'care'},
+  {id:'c18',text:'今、呼吸は\n浅くなっていませんか？',                      cat:'care'},
+  {id:'c19',text:'今の体の重さに\n少し気づいてみて。',                      cat:'care'},
+  {id:'c20',text:'肩を\nゆっくり回してみてください。',                      cat:'care'},
+  // ── 気づき・朝・追加 ──
+  {id:'cm5',text:'今朝の空気は\nどんな感じですか？',                        cat:'care',slots:['dawn','morning']},
+  {id:'cm6',text:'朝ごはんは\nゆっくり食べられましたか？',                   cat:'care',slots:['dawn','morning']},
+  // ── 気づき・昼・追加 ──
+  {id:'cd4',text:'少し立ち上がって\n体を伸ばしませんか。',                   cat:'care',slots:['midday']},
+  {id:'cd5',text:'画面を閉じて\n5分だけ目を休めてみては。',                 cat:'care',slots:['midday']},
+  // ── 気づき・夕方・追加 ──
+  {id:'ce3',text:'一日の疲れを\nゆっくり手放していきましょう。',             cat:'care',slots:['evening']},
+  {id:'ce4',text:'夕方に少し体を動かすと\n夜がよくなります。',              cat:'care',slots:['evening']},
+  // ── 気づき・夜・追加 ──
+  {id:'cn9', text:'今夜は温かいものを\n飲んでみてください。',               cat:'care',slots:['dusk','night']},
+  {id:'cn10',text:'スマホを少し遠ざけて\n目を休めてみては。',               cat:'care',slots:['dusk','night']},
+  {id:'cn11',text:'今夜の体の疲れに\n気づいてあげてください。',             cat:'care',slots:['dusk','night']},
+  {id:'cn12',text:'夜は\n何もしなくてもいい時間です。',                     cat:'care',slots:['night']},
+  // ── 問いかけ・追加 ──
+  {id:'j16',text:'今日、何か「よかった」と\n思えることはありますか？',       cat:'journal'},
+  {id:'j17',text:'最近、体の変化に\n気づきましたか？',                      cat:'journal'},
+  {id:'j18',text:'今のあなたに\n声をかけるとしたら\nどんな言葉ですか？',     cat:'journal'},
+  {id:'j19',text:'今日、誰かに\n助けてもらいましたか？',                    cat:'journal'},
+  {id:'j20',text:'最近、好きな音楽を\n聴きましたか？',                      cat:'journal'},
+  {id:'j21',text:'今日の一番の\nことはなんでしたか？',                      cat:'journal'},
+  {id:'j22',text:'明日、ひとつだけ\n楽しみにできることはありますか？',       cat:'journal'},
+  {id:'j23',text:'最近、自分の「好き」に\n正直でいられていますか？',         cat:'journal'},
+  {id:'j24',text:'今、空腹ですか？\n喉は渇いていませんか？',                cat:'journal'},
+  {id:'j25',text:'最近、ゆっくり\nお茶を飲みましたか？',                    cat:'journal'},
+  {id:'j26',text:'今日のあなたに\n一言かけるとしたら？',                    cat:'journal'},
+  {id:'j27',text:'あなたの「普通の一日」が\n誰かにとっての\n宝物かもしれない。', cat:'journal'},
+  {id:'j28',text:'今日、空を\n見上げましたか？',                            cat:'journal'},
+  {id:'j29',text:'最近、誰かに\n「ありがとう」を伝えましたか？',             cat:'journal'},
+  // ── 問いかけ・朝 ──
+  {id:'jm1',text:'今日一日\nどんな気分でいたいですか？',                    cat:'journal',slots:['dawn','morning']},
+  {id:'jm2',text:'今朝の目覚めは\n何点でしたか？',                          cat:'journal',slots:['dawn','morning']},
+  // ── 問いかけ・夜 ──
+  {id:'jn1',text:'今夜、枕に頭を乗せたら\nどんな気持ちになりそうですか？',  cat:'journal',slots:['dusk','night']},
+  {id:'jn2',text:'今日の疲れを\n言葉にするとしたら？',                      cat:'journal',slots:['night']},
+  {id:'jn3',text:'今夜よかったことを\nひとつだけ浮かべてみて。',            cat:'journal',slots:['dusk','night']},
+  // ── スキップ・追加 ──
+  {id:'s08',text:'今日はここまでで\nいい。本当に。',                        cat:'skip',okFor:['skip','snooze']},
+  {id:'s09',text:'無理をしないことも\n知恵です。',                          cat:'skip',okFor:['skip','snooze']},
+  {id:'s10',text:'体が「まだ」と言っているなら\n少し待ってあげて。',          cat:'skip',okFor:['skip','snooze']},
+  {id:'s11',text:'自分にやさしくする選択。\nそれで正解です。',               cat:'skip',okFor:['skip','snooze']},
+  {id:'s12',text:'完璧にやらなくていい。\nただそこにいるだけでいい。',       cat:'skip',okFor:['skip','snooze']},
+  {id:'s13',text:'今日できなかったことは\n明日へのバトンです。',             cat:'skip',okFor:['skip','snooze']},
+  {id:'s14',text:'休むことを\n選んだあなたは正しい。',                       cat:'skip',okFor:['skip','snooze']},
+  // ── 短い名言・追加 ──
+  {id:'q13',text:'自分の内側に\n宇宙がある。',                              cat:'quote',sub:'ヨーガ哲学'},
+  {id:'q14',text:'行動は幸福の\n基本条件である。',                          cat:'quote',sub:'アリストテレス'},
+  {id:'q15',text:'水は柔らかく\nされど岩を穿つ。',                          cat:'quote',sub:'老子'},
+  {id:'q16',text:'一日一日を\n種を蒔くように生きよ。',                      cat:'quote',sub:'ゲーテ'},
+  {id:'q17',text:'自然は最良の\n医師である。',                              cat:'quote',sub:'ヒポクラテス'},
+  {id:'q18',text:'今日だけで十分。\n今日をただ生きよ。',                    cat:'quote',sub:'禅の言葉'},
+  {id:'q19',text:'呼吸は\n今という贈り物である。',                          cat:'quote',sub:'ティク・ナット・ハン'},
+  {id:'q20',text:'体は心の鏡。\n体を大切にすることは\n心を大切にすること。', cat:'quote'},
+  {id:'q21',text:'歩くことは\n最良の薬である。',                            cat:'quote',sub:'ヒポクラテス'},
+  {id:'q22',text:'急ぐな。\nでも止まるな。',                               cat:'quote',sub:'ゲーテ'},
+  {id:'q23',text:'一つのことを\nしなやかに続ける人が\n最後には咲く。',       cat:'quote'},
+  {id:'q24',text:'人生は今この瞬間の\n積み重ねでできている。',               cat:'quote',sub:'マルクス・アウレリウス'},
+  {id:'q25',text:'ゆっくり、深く。\nそれが力になる。',                      cat:'quote'},
+  {id:'q26',text:'月が欠けても\n月は月。\nあなたもそのままでいい。',         cat:'quote'},
+  {id:'q27',text:'小さな行動が\n毎日あなたを作っている。',                  cat:'quote',sub:'James Clear'},
+  {id:'q28',text:'空が晴れるのを\n待たなくていい。\n今日の雲も空の一部。',   cat:'quote'},
+  {id:'q29',text:'花は無理をして\n咲こうとはしない。\nただ咲く。',           cat:'quote'},
+  {id:'q30',text:'木は嵐の中でも\n根を張り続ける。',                        cat:'quote',sub:'禅の言葉'},
+  {id:'q31',text:'季節が変わるように\n人も少しずつ変わります。',             cat:'quote'},
+  {id:'q32',text:'静かに座っていられる人は\n何も失わない。',                 cat:'quote',sub:'老子'},
+  {id:'q33',text:'体を動かすことで\n頭が動く。',                            cat:'quote'},
+  {id:'q34',text:'雨の日もある。\n晴れの日もある。\n今日はどちらですか？',   cat:'quote'},
 ];
 
 /* ─ 直近10件を除外してスロット・アクション適合メッセージをランダムに選出 ─ */
@@ -1053,14 +1152,33 @@ function pickAfterMsg(action){
   return msg;
 }
 
+var _aaTimer=null;
+var _aaSwipeStartY=0;
+var _pendingMilestone=null;
+(function(){
+  var ov=document.getElementById('afterActionOverlay');
+  ov.addEventListener('touchstart',function(e){ _aaSwipeStartY=e.touches[0].clientY; },{passive:true});
+  ov.addEventListener('touchend',function(e){
+    var dy=e.changedTouches[0].clientY-_aaSwipeStartY;
+    if(dy>60) hideAfterAction();
+  },{passive:true});
+})();
+
 function showAfterAction(action){
   var msg=pickAfterMsg(action);
   document.getElementById('aaText').textContent=msg.text;
   document.getElementById('aaSub').textContent=msg.sub||'';
   document.getElementById('afterActionOverlay').classList.add('show');
+  if(_aaTimer) clearTimeout(_aaTimer);
+  _aaTimer=setTimeout(hideAfterAction,5000);
 }
 function hideAfterAction(){
+  if(_aaTimer){ clearTimeout(_aaTimer); _aaTimer=null; }
   document.getElementById('afterActionOverlay').classList.remove('show');
+  if(_pendingMilestone){
+    var m=_pendingMilestone; _pendingMilestone=null;
+    setTimeout(function(){ showMilestone(m); }, 400);
+  }
 }
 
 const MILESTONES={
@@ -1114,6 +1232,54 @@ var BONUS_POOL = [
   {id:'b08',icon:'✍️', title:'今日の良かったことを1つ書く',timeOk: null},
   {id:'b10',icon:'🌸', title:'好きな香りのものを嗅ぐ',     timeOk: null},
 ];
+
+/* ════════════════════════════════════════════
+   三食ケアメッセージ
+════════════════════════════════════════════ */
+const MEAL_CARE_MSGS = {
+  breakfast: [
+    '朝ごはん、食べられましたか？',
+    'バナナ一本でもいいので食べてみて。',
+    '一口でいいから、何か口に入れて。',
+    'ヨーグルトだけでも、どうですか。',
+    '朝に何か食べると体が動きやすくなります。',
+    'コップ一杯の牛乳だけでも違います。',
+  ],
+  lunch: [
+    'お昼、食べられましたか？',
+    '一口でもいいから食べてみて。',
+    'バナナやおにぎりだけでも大丈夫。',
+    '忙しくても、少しだけ食べましょう。',
+    'お腹に何か入れると午後が楽になります。',
+    'コンビニでもいいので、何か食べてみては。',
+    'お茶でも飲んで、ひと息いれませんか。',
+  ],
+  dinner: [
+    '夕ごはん、まだですか？',
+    '一口でもいいから食べてみて。',
+    'お腹が空いていたら、何か食べてください。',
+    'バナナやヨーグルトだけでも大丈夫です。',
+    'ゆっくりでいいので、今夜も食べてほしい。',
+    'お茶だけでも飲んで温まってください。',
+  ],
+};
+
+// 三食の次の食事時刻（ケアメッセージを止めるタイミング）
+function getMealCareMsg(mealId) {
+  var nm = NM();
+  var mealTk = {breakfast:'t-breakfast', lunch:'t-lunch', dinner:'t-dinner'};
+  var nextMeal = {breakfast:'t-lunch', lunch:'t-dinner', dinner:null};
+  var msgs = MEAL_CARE_MSGS[mealId];
+  if (!msgs) return null;
+  var mealMin = PT(sets[mealTk[mealId]] || '00:00');
+  // 30分以上過ぎていない → ケアなし
+  if (nm < mealMin + 30) return null;
+  // 次の食事時刻を過ぎている → ケアなし
+  var nk = nextMeal[mealId];
+  if (nk && nm >= PT(sets[nk] || '23:59')) return null;
+  // 既に完了 → ケアなし（呼び出し元でチェックするが念のため）
+  return msgs[Math.floor(Math.random() * msgs.length)];
+}
 
 function getAvailableBonus(){
   try {
@@ -1372,12 +1538,12 @@ function buildCard(r,nm){
     <div class="reveal-skip"><div class="rv-lbl">スキップ</div><div class="rv-icon">⏭</div></div>`;
   const card=document.createElement('div');
   card.id='card-'+r.id;
-  card.className=`swipe-card glass${st?' state-'+st:''}${isUp?' upcoming':''}`;
+  card.className=`swipe-card glass${st?' state-'+st:''}${isUp?' upcoming':''}${r._hasCare?' care-alert':''}`;
   card.innerHTML=`<div class="c-top">
     <div class="c-icon">${r.icon}</div>
     <div class="c-body">
       <div class="c-title-row"><span class="c-title">${r.title}</span><span class="c-time">${r.time}</span></div>
-      ${r.msg?`<div class="c-msg">${r.msg}</div>`:''}
+      ${r.msg?`<div class="c-msg${r._hasCare?' c-msg-care':''}">${r.msg}</div>`:''}
     </div>
     <div class="c-right">${badge}</div>
   </div>
@@ -1406,7 +1572,12 @@ function buildCard(r,nm){
 
 function renderMeals(nm,sl){
   const el=document.getElementById('mealCards');el.innerHTML='';
-  getMeals().forEach(r=>{r.msg=getMsg(r.id,sl);el.appendChild(buildCard(r,nm));});
+  getMeals().forEach(function(r){
+    var care = !states[r.id] ? getMealCareMsg(r.id) : null;
+    r.msg = care || getMsg(r.id, sl);
+    if(care) r._hasCare = true;
+    el.appendChild(buildCard(r,nm));
+  });
 }
 
 function renderCat(prefix,catId,items,nm){
@@ -1443,7 +1614,16 @@ function renderProg(){
   if(bar) bar.style.width = lovePct + '%';
 
   if(appReady && lovePct > 0){
-    [25,50,75,100].forEach(function(m){if(lovePct>=m&&prevPct<m)showMilestone(m);});
+    [25,50,75,100].forEach(function(m){
+      if(lovePct>=m && prevPct<m){
+        // 名言overlayが表示中なら後で表示、そうでなければ即表示
+        if(_aaTimer !== null){
+          _pendingMilestone = m;
+        } else {
+          showMilestone(m);
+        }
+      }
+    });
   }
   prevPct = lovePct;
 }
@@ -1717,14 +1897,10 @@ function switchP(p){
   var main     = document.getElementById('mainPanel');
   var stats    = document.getElementById('statsPanel');
   var settings = document.getElementById('settingsPanel');
-  var fab      = document.getElementById('fabWrap');
   if(main)     main.style.display     = (p==='main')     ? 'block' : 'none';
   if(stats)    stats.style.display    = (p==='stats')    ? 'block' : 'none';
   if(settings) settings.style.display = (p==='settings') ? 'block' : 'none';
-  if(stats)    stats.style.background    = (p==='stats')    ? 'var(--prog-bg)' : 'transparent';
-  if(settings) settings.style.background = (p==='settings') ? 'var(--prog-bg)' : 'transparent';
-  if(fab) fab.style.zIndex = '999999';
-  updateFabActive(p);
+  updateNavActive(p);
   if(p==='stats')    renderStats();
   if(p==='settings'){
     renderSettingsToggles();
@@ -1736,6 +1912,13 @@ function switchP(p){
       });
     }, 50);
   }
+}
+
+function updateNavActive(panel){
+  ['main','stats','settings'].forEach(function(p){
+    var btn = document.getElementById('gnav-'+p);
+    if(btn) btn.classList.toggle('active', p===panel);
+  });
 }
 function renderStats(){
   const days=['日','月','火','水','木','金','土'],today=new Date();
@@ -1790,10 +1973,6 @@ function initApp(){
   document.querySelectorAll('.mode-chip').forEach(function(el){
     el.classList.toggle('active', el.getAttribute('data-mode')===dayMode);
     el.addEventListener('click', function(){ setDayMode(el.getAttribute('data-mode')); });
-  });
-  document.addEventListener('click', function(e){
-    var wrap = document.getElementById('fabWrap');
-    if(fabOpen && wrap && !wrap.contains(e.target)) closeFab();
   });
   updateSetupSummary();
   applyTheme(slot(new Date().getHours()));
@@ -2290,55 +2469,6 @@ function updateSetupSummary(){
 }
 
 /* ════════════════════════════
-   フローティングメニュー
-════════════════════════════ */
-var fabOpen = false;
-
-function toggleFab(){
-  fabOpen = !fabOpen;
-  var toggle = document.getElementById('fabToggle');
-  if(toggle){
-    toggle.style.transform = fabOpen ? 'rotate(135deg)' : '';
-    toggle.style.background = fabOpen ? 'rgba(255,255,255,0.32)' : 'rgba(255,255,255,0.22)';
-  }
-  ['fab-main','fab-stats','fab-settings'].forEach(function(id){
-    var el = document.getElementById(id);
-    if(!el) return;
-    if(fabOpen){
-      el.style.opacity = '1';
-      el.style.pointerEvents = 'auto';
-      el.style.transform = 'translateY(0)';
-    } else {
-      el.style.opacity = '0';
-      el.style.pointerEvents = 'none';
-      el.style.transform = 'translateY(16px)';
-    }
-  });
-}
-
-function closeFab(){ if(fabOpen) toggleFab(); }
-
-function fabSwitchP(panel){
-  closeFab();
-  setTimeout(function(){ switchP(panel); }, 80);
-}
-
-function updateFabActive(panel){
-  var map = {main:'fabBtnMain', stats:'fabBtnStats', settings:'fabBtnSettings'};
-  Object.keys(map).forEach(function(p){
-    var btn = document.getElementById(map[p]);
-    if(!btn) return;
-    if(p === panel){
-      btn.style.background = 'rgba(255,255,255,0.38)';
-      btn.style.borderColor = 'rgba(255,255,255,0.75)';
-    } else {
-      btn.style.background = 'rgba(255,255,255,0.18)';
-      btn.style.borderColor = 'rgba(255,255,255,0.35)';
-    }
-  });
-}
-
-/* ════════════════════════════
    朝の設定ポップアップ
 ════════════════════════════ */
 var tmpMorningMode = 'home';
@@ -2566,21 +2696,20 @@ function testContextPopup(){
 </script>
 
 <!-- FAB menu -->
-<div id="fabWrap" style="position:fixed;bottom:max(24px,env(safe-area-inset-bottom));right:20px;z-index:9999;display:flex;flex-direction:column;align-items:flex-end;gap:10px;">
-  <div id="fab-main"     style="display:flex;align-items:center;gap:8px;opacity:0;pointer-events:none;transform:translateY(16px);transition:opacity 0.2s,transform 0.22s;">
-    <span style="font-size:12px;font-weight:500;color:#fff;background:rgba(0,0,0,0.45);border:1px solid rgba(255,255,255,0.18);border-radius:20px;padding:5px 13px;white-space:nowrap;">TODAY</span>
-    <div id="fabBtnMain" onclick="fabSwitchP('main')" style="width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;touch-action:manipulation;user-select:none;background:rgba(255,255,255,0.18);border:1.5px solid rgba(255,255,255,0.35);box-shadow:0 4px 16px rgba(0,0,0,0.20);">🏠</div>
+<nav class="gnav" id="gnav">
+  <div class="gnav-btn active" id="gnav-main" onclick="switchP('main')">
+    <div class="gnav-ico">🏠</div>
+    <div class="gnav-lbl">ホーム</div>
   </div>
-  <div id="fab-stats"    style="display:flex;align-items:center;gap:8px;opacity:0;pointer-events:none;transform:translateY(16px);transition:opacity 0.2s 0.03s,transform 0.22s 0.03s;">
-    <span style="font-size:12px;font-weight:500;color:#fff;background:rgba(0,0,0,0.45);border:1px solid rgba(255,255,255,0.18);border-radius:20px;padding:5px 13px;white-space:nowrap;">記録</span>
-    <div id="fabBtnStats" onclick="fabSwitchP('stats')" style="width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;touch-action:manipulation;user-select:none;background:rgba(255,255,255,0.18);border:1.5px solid rgba(255,255,255,0.35);box-shadow:0 4px 16px rgba(0,0,0,0.20);">📅</div>
+  <div class="gnav-btn" id="gnav-stats" onclick="switchP('stats')">
+    <div class="gnav-ico">📅</div>
+    <div class="gnav-lbl">記録</div>
   </div>
-  <div id="fab-settings" style="display:flex;align-items:center;gap:8px;opacity:0;pointer-events:none;transform:translateY(16px);transition:opacity 0.2s 0.06s,transform 0.22s 0.06s;">
-    <span style="font-size:12px;font-weight:500;color:#fff;background:rgba(0,0,0,0.45);border:1px solid rgba(255,255,255,0.18);border-radius:20px;padding:5px 13px;white-space:nowrap;">設定</span>
-    <div id="fabBtnSettings" onclick="fabSwitchP('settings')" style="width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;touch-action:manipulation;user-select:none;background:rgba(255,255,255,0.18);border:1.5px solid rgba(255,255,255,0.35);box-shadow:0 4px 16px rgba(0,0,0,0.20);">⚙️</div>
+  <div class="gnav-btn" id="gnav-settings" onclick="switchP('settings')">
+    <div class="gnav-ico">⚙️</div>
+    <div class="gnav-lbl">設定</div>
   </div>
-  <div id="fabToggle" onclick="toggleFab()" style="width:54px;height:54px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;touch-action:manipulation;user-select:none;background:rgba(255,255,255,0.22);border:1.5px solid rgba(255,255,255,0.45);box-shadow:0 6px 24px rgba(0,0,0,0.22);transition:transform 0.2s,background 0.2s;">✦</div>
-</div>
+</nav>
 
 <!-- 朝の設定ポップアップ -->
 <div class="morning-overlay" id="morningOverlay">
@@ -2610,7 +2739,7 @@ function testContextPopup(){
 </div>
 
 <!-- ═══ STATS PANEL ═══ -->
-<div id="statsPanel" style="display:none;position:fixed;inset:0;z-index:99999;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:60px 18px 120px;">
+<div id="statsPanel" style="display:none;position:fixed;inset:0;z-index:99999;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:50px 18px 90px;">
   <div style="max-width:500px;margin:0 auto;">
     <div class="p-title">今週の記録</div>
     <div class="week-row" id="weekRow"></div>
@@ -2619,7 +2748,7 @@ function testContextPopup(){
 </div>
 
 <!-- ═══ SETTINGS PANEL ═══ -->
-<div id="settingsPanel" style="display:none;position:fixed;inset:0;z-index:99999;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:60px 18px 120px;">
+<div id="settingsPanel" style="display:none;position:fixed;inset:0;z-index:99999;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:50px 18px 90px;">
   <div style="max-width:500px;margin:0 auto;">
     <div class="p-title">設定</div>
     <div class="sg glass">
